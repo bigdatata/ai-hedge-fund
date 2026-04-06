@@ -215,6 +215,16 @@ def get_model(model_name: str, model_provider: ModelProvider, api_keys: dict = N
                 raise ValueError("GigaChat API key not found. Please make sure GIGACHAT_API_KEY is set in your .env file or provided via API keys.")
 
             return GigaChat(credentials=api_key, model=model_name)
+    elif model_provider == ModelProvider.ALIBABA:
+        api_key = (api_keys or {}).get("DASHSCOPE_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
+        if not api_key:
+            print(f"API Key Error: Please make sure DASHSCOPE_API_KEY is set in your .env file or provided via API keys.")
+            raise ValueError("DashScope API key not found. Please make sure DASHSCOPE_API_KEY is set in your .env file or provided via API keys.")
+        return ChatOpenAI(
+            model=model_name,
+            openai_api_key=api_key,
+            openai_api_base="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        )
     elif model_provider == ModelProvider.AZURE_OPENAI:
         # Get and validate API key
         api_key = os.getenv("AZURE_OPENAI_API_KEY")
