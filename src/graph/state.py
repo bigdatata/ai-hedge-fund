@@ -5,6 +5,7 @@ from langchain_core.messages import BaseMessage
 
 
 import json
+from src.utils.i18n import t
 
 
 def merge_dicts(a: dict[str, any], b: dict[str, any]) -> dict[str, any]:
@@ -19,7 +20,7 @@ class AgentState(TypedDict):
 
 
 def show_agent_reasoning(output, agent_name):
-    print(f"\n{'=' * 10} {agent_name.center(28)} {'=' * 10}")
+    print(f"\n{'=' * 10} {t('agent_reasoning_header')} - {agent_name} {'=' * 10}")
 
     def convert_to_serializable(obj):
         if hasattr(obj, "to_dict"):  # Handle Pandas Series/DataFrame

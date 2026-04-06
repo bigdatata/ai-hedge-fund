@@ -792,7 +792,7 @@ def generate_buffett_output(
                 "- 30-49%: Outside my expertise or concerning fundamentals\n"
                 "- 10-29%: Poor business or significantly overvalued\n"
                 "\n"
-                "Keep reasoning under 120 characters. Do not invent data. Return JSON only."
+                "Keep reasoning under 120 characters. Do not invent data. Return JSON only. 所有推理和理由必须使用简体中文。"
             ),
             (
                 "human",

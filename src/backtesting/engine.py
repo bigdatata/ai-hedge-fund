@@ -13,7 +13,7 @@ from .portfolio import Portfolio
 from .types import PerformanceMetrics, PortfolioValuePoint
 from .valuation import calculate_portfolio_value, compute_exposures
 from .output import OutputBuilder
-from .benchmarks import BenchmarkCalculator
+from .benchmarks import BenchmarkCalculator, get_benchmark_for_tickers
 
 from src.tools.api import (
     get_company_news,
@@ -66,6 +66,7 @@ class BacktestEngine:
 
         # Benchmark calculator
         self._benchmark = BenchmarkCalculator()
+        self._benchmark_ticker = get_benchmark_for_tickers(tickers)
 
         self._portfolio_values: list[PortfolioValuePoint] = []
         self._table_rows: list[list] = []
@@ -89,8 +90,8 @@ class BacktestEngine:
             get_insider_trades(ticker, self._end_date, start_date=self._start_date, limit=1000)
             get_company_news(ticker, self._end_date, start_date=self._start_date, limit=1000)
         
-        # Preload data for SPY for benchmark comparison
-        get_prices("SPY", self._start_date, self._end_date)
+        # Preload data for benchmark index
+        get_prices(self._benchmark_ticker, self._start_date, self._end_date)
 
 
     def run_backtest(self) -> PerformanceMetrics:
@@ -173,7 +174,7 @@ class BacktestEngine:
                 portfolio=self._portfolio,
                 performance_metrics=self._performance_metrics,
                 total_value=total_value,
-                benchmark_return_pct=self._benchmark.get_return_pct("SPY", self._start_date, current_date_str),
+                benchmark_return_pct=self._benchmark.get_return_pct(self._benchmark_ticker, self._start_date, current_date_str),
             )
             # Prepend today's rows to historical rows so latest day is on top
             self._table_rows = rows + self._table_rows

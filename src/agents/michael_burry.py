@@ -341,6 +341,7 @@ def _generate_burry_output(
                 
                 For example, if bullish: "FCF yield 12.8%. EV/EBIT 6.2. Debt-to-equity 0.4. Net insider buying 25k shares. Market missing value due to overreaction to recent litigation. Strong buy."
                 For example, if bearish: "FCF yield only 2.1%. Debt-to-equity concerning at 2.3. Management diluting shareholders. Pass."
+                所有推理和理由必须使用简体中文。
                 """,
             ),
             (

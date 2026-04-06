@@ -11,6 +11,7 @@ from src.utils.ollama import ensure_ollama_and_model
 
 from dataclasses import dataclass
 from typing import Optional
+from src.utils.i18n import t
 
 
 def add_common_args(
@@ -78,9 +79,9 @@ def select_analysts(flags: dict | None = None) -> list[str]:
         return [a.strip() for a in flags["analysts"].split(",") if a.strip()]
 
     choices = questionary.checkbox(
-        "Select your AI analysts.",
+        t('select_analysts'),
         choices=[questionary.Choice(display, value=value) for display, value in ANALYST_ORDER],
-        instruction="\n\nInstructions: \n1. Press Space to select/unselect analysts.\n2. Press 'a' to select/unselect all.\n3. Press Enter when done.",
+        instruction=t('space_instruction'),
         validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
         style=questionary.Style(
             [
@@ -93,11 +94,11 @@ def select_analysts(flags: dict | None = None) -> list[str]:
     ).ask()
 
     if not choices:
-        print("\n\nInterrupt received. Exiting...")
+        print(t('interrupt_exiting'))
         sys.exit(0)
 
     print(
-        f"\nSelected analysts: {', '.join(Fore.GREEN + c.title().replace('_', ' ') + Style.RESET_ALL for c in choices)}\n"
+        f"\n{t('selected_analysts')}: {', '.join(Fore.GREEN + c.title().replace('_', ' ') + Style.RESET_ALL for c in choices)}\n"
     )
     return choices
 
@@ -114,12 +115,12 @@ def select_model(use_ollama: bool, model_flag: str | None = None) -> tuple[str, 
             )
             return model.model_name, model.provider.value
         else:
-            print(f"{Fore.RED}Model '{model_flag}' not found. Please select a model.{Style.RESET_ALL}")
+            print(f"{Fore.RED}{t('model_not_found', model_flag=model_flag)}{Style.RESET_ALL}")
 
     if use_ollama:
-        print(f"{Fore.CYAN}Using Ollama for local LLM inference.{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{t('using_ollama')}{Style.RESET_ALL}")
         model_name = questionary.select(
-            "Select your Ollama model:",
+            t('select_ollama_model'),
             choices=[questionary.Choice(display, value=value) for display, value, _ in OLLAMA_LLM_ORDER],
             style=questionary.Style(
                 [
@@ -132,26 +133,26 @@ def select_model(use_ollama: bool, model_flag: str | None = None) -> tuple[str, 
         ).ask()
 
         if not model_name:
-            print("\n\nInterrupt received. Exiting...")
+            print(t('interrupt_exiting'))
             sys.exit(0)
 
         if model_name == "-":
-            model_name = questionary.text("Enter the custom model name:").ask()
+            model_name = questionary.text(t('enter_custom_model')).ask()
             if not model_name:
-                print("\n\nInterrupt received. Exiting...")
+                print(t('interrupt_exiting'))
                 sys.exit(0)
 
         if not ensure_ollama_and_model(model_name):
-            print(f"{Fore.RED}Cannot proceed without Ollama and the selected model.{Style.RESET_ALL}")
+            print(f"{Fore.RED}{t('cannot_proceed_ollama')}{Style.RESET_ALL}")
             sys.exit(1)
 
         model_provider = ModelProvider.OLLAMA.value
         print(
-            f"\nSelected {Fore.CYAN}Ollama{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
+            f"\n{t('selected_ollama_model')}: {Fore.CYAN}Ollama{Style.RESET_ALL} - {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
         )
     else:
         model_choice = questionary.select(
-            "Select your LLM model:",
+            t('select_llm_model'),
             choices=[questionary.Choice(display, value=(name, provider)) for display, name, provider in LLM_ORDER],
             style=questionary.Style(
                 [
@@ -164,25 +165,25 @@ def select_model(use_ollama: bool, model_flag: str | None = None) -> tuple[str, 
         ).ask()
 
         if not model_choice:
-            print("\n\nInterrupt received. Exiting...")
+            print(t('interrupt_exiting'))
             sys.exit(0)
 
         model_name, model_provider = model_choice
 
         model_info = get_model_info(model_name, model_provider)
         if model_info and model_info.is_custom():
-            model_name = questionary.text("Enter the custom model name:").ask()
+            model_name = questionary.text(t('enter_custom_model')).ask()
             if not model_name:
                 print("\n\nInterrupt received. Exiting...")
                 sys.exit(0)
 
         if model_info:
             print(
-                f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
+                f"\n{t('selected_model')}: {Fore.CYAN}{model_provider}{Style.RESET_ALL} - {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
             )
         else:
             model_provider = "Unknown"
-            print(f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n")
+            print(f"\n{t('selected_model')}: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n")
 
     return model_name, model_provider or ""
 

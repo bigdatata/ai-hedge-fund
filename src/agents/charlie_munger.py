@@ -824,8 +824,7 @@ def generate_munger_output(
     template = ChatPromptTemplate.from_messages([
         ("system",
          "You are Charlie Munger. Decide bullish, bearish, or neutral using only the facts. "
-         "Return JSON only. Keep reasoning under 120 characters. "
-         "Use the provided confidence exactly; do not change it."),
+         "Return JSON only. Keep reasoning under 120 characters. 所有推理和理由必须使用简体中文。Use the provided confidence exactly; do not change it."),
         ("human",
          "Ticker: {ticker}\n"
          "Facts:\n{facts}\n"

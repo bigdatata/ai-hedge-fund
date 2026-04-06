@@ -13,11 +13,12 @@ from src.llm.models import LLM_ORDER, OLLAMA_LLM_ORDER, get_model_info, ModelPro
 from src.utils.analysts import ANALYST_ORDER
 from src.main import run_hedge_fund
 from src.utils.ollama import ensure_ollama_and_model
+from src.utils.i18n import t
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run backtesting engine (modular)")
-    parser.add_argument("--tickers", type=str, required=False, help="Comma-separated tickers")
+    parser = argparse.ArgumentParser(description=t('run_backtesting'))
+    parser.add_argument("--tickers", type=str, required=False, help=t('tickers_help'))
     parser.add_argument(
         "--end-date",
         type=str,
@@ -49,9 +50,9 @@ def main() -> int:
     else:
         # Interactive analyst selection (same as legacy backtester)
         choices = questionary.checkbox(
-            "Use the Space bar to select/unselect analysts.",
+            t('space_select'),
             choices=[questionary.Choice(display, value=value) for display, value in ANALYST_ORDER],
-            instruction="\n\nPress 'a' to toggle all.\n\nPress Enter when done to run the hedge fund.",
+            instruction=t('press_enter_done'),
             validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
             style=questionary.Style(
                 [
@@ -63,19 +64,19 @@ def main() -> int:
             ),
         ).ask()
         if not choices:
-            print("\n\nInterrupt received. Exiting...")
+            print(t('interrupt_exiting'))
             return 1
         selected_analysts = choices
         print(
-            f"\nSelected analysts: "
+            f"\n{t('selected_analysts')}: "
             f"{', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}\n"
         )
 
     # Model selection simplified: default to first ordered model or Ollama flag
     if args.ollama:
-        print(f"{Fore.CYAN}Using Ollama for local LLM inference.{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{t('using_ollama')}{Style.RESET_ALL}")
         model_name = questionary.select(
-            "Select your Ollama model:",
+            t('select_ollama_model'),
             choices=[questionary.Choice(display, value=value) for display, value, _ in OLLAMA_LLM_ORDER],
             style=questionary.Style(
                 [
@@ -87,23 +88,23 @@ def main() -> int:
             ),
         ).ask()
         if not model_name:
-            print("\n\nInterrupt received. Exiting...")
+            print(t('interrupt_exiting'))
             return 1
         if model_name == "-":
-            model_name = questionary.text("Enter the custom model name:").ask()
+            model_name = questionary.text(t('enter_custom_model')).ask()
             if not model_name:
-                print("\n\nInterrupt received. Exiting...")
+                print(t('interrupt_exiting'))
                 return 1
         if not ensure_ollama_and_model(model_name):
-            print(f"{Fore.RED}Cannot proceed without Ollama and the selected model.{Style.RESET_ALL}")
+            print(f"{Fore.RED}{t('cannot_proceed_ollama')}{Style.RESET_ALL}")
             return 1
         model_provider = ModelProvider.OLLAMA.value
         print(
-            f"\nSelected {Fore.CYAN}Ollama{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
+            f"\n{t('selected_ollama_model')}: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
         )
     else:
         model_choice = questionary.select(
-            "Select your LLM model:",
+            t('select_llm_model'),
             choices=[questionary.Choice(display, value=(name, provider)) for display, name, provider in LLM_ORDER],
             style=questionary.Style(
                 [
@@ -115,17 +116,17 @@ def main() -> int:
             ),
         ).ask()
         if not model_choice:
-            print("\n\nInterrupt received. Exiting...")
+            print(t('interrupt_exiting'))
             return 1
         model_name, model_provider = model_choice
         model_info = get_model_info(model_name, model_provider)
         if model_info and model_info.is_custom():
-            model_name = questionary.text("Enter the custom model name:").ask()
+            model_name = questionary.text(t('enter_custom_model')).ask()
             if not model_name:
-                print("\n\nInterrupt received. Exiting...")
+                print(t('interrupt_exiting'))
                 return 1
         print(
-            f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
+            f"\n{t('selected_model')}: {Fore.CYAN}{model_provider}{Style.RESET_ALL} - {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n"
         )
 
     engine = BacktestEngine(
@@ -145,11 +146,11 @@ def main() -> int:
 
     # Minimal terminal output (no plots)
     if values:
-        print(f"\n{Fore.WHITE}{Style.BRIGHT}ENGINE RUN COMPLETE{Style.RESET_ALL}")
+        print(f"\n{Fore.WHITE}{Style.BRIGHT}{t('engine_run_complete')}{Style.RESET_ALL}")
         last_value = values[-1]["Portfolio Value"]
         start_value = values[0]["Portfolio Value"]
         total_return = (last_value / start_value - 1.0) * 100.0 if start_value else 0.0
-        print(f"Total Return: {Fore.GREEN if total_return >= 0 else Fore.RED}{total_return:.2f}%{Style.RESET_ALL}")
+        print(f"{t('total_return')}: {Fore.GREEN if total_return >= 0 else Fore.RED}{total_return:.2f}%{Style.RESET_ALL}")
     if metrics.get("sharpe_ratio") is not None:
         print(f"Sharpe: {metrics['sharpe_ratio']:.2f}")
     if metrics.get("sortino_ratio") is not None:

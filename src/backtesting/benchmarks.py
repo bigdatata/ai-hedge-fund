@@ -3,6 +3,33 @@ from __future__ import annotations
 import pandas as pd
 
 from src.tools.api import get_price_data
+from src.tools.market_detector import detect_market, Market
+
+
+# Benchmark index mapping by market
+BENCHMARK_MAP = {
+    Market.US: "SPY",          # S&P 500 ETF
+    Market.A_SHARE: "000300",   # CSI 300 (沪深300)
+    Market.HK: "HSI",           # Hang Seng Index (恒生指数)
+}
+
+
+def get_benchmark_for_tickers(tickers: list[str]) -> str:
+    """Determine appropriate benchmark ticker based on majority of tickers.
+
+    Returns the benchmark index code for the dominant market.
+    """
+    if not tickers:
+        return "SPY"
+
+    market_counts: dict[Market, int] = {Market.US: 0, Market.A_SHARE: 0, Market.HK: 0}
+    for t in tickers:
+        m = detect_market(t)
+        market_counts[m] = market_counts.get(m, 0) + 1
+
+    # Use the market with the most tickers
+    dominant_market = max(market_counts, key=market_counts.get)
+    return BENCHMARK_MAP.get(dominant_market, "SPY")
 
 
 class BenchmarkCalculator:
@@ -28,5 +55,3 @@ class BenchmarkCalculator:
             return (float(last_close) / float(first_close) - 1.0) * 100.0
         except Exception:
             return None
-
-

@@ -728,7 +728,7 @@ def generate_taleb_output(
                 "- 10-29%: Clearly fragile or dangerous vol regime\n"
                 "\n"
                 "Use Taleb's vocabulary: antifragile, convexity, skin in the game, via negativa, barbell, turkey problem, Lindy effect.\n"
-                "Keep reasoning under 150 characters. Do not invent data. Return JSON only.",
+                "Keep reasoning under 150 characters. Do not invent data. Return JSON only. 所有推理和理由必须使用简体中文。",
             ),
             (
                 "human",

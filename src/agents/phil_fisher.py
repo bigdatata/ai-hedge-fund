@@ -565,6 +565,7 @@ def generate_fisher_output(
                 - "signal": "bullish" or "bearish" or "neutral"
                 - "confidence": a float between 0 and 100
                 - "reasoning": a detailed explanation
+              所有推理和理由必须使用简体中文。
               """,
             ),
             (

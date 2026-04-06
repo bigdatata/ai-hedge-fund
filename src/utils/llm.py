@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from src.llm.models import get_model, get_model_info
 from src.utils.progress import progress
 from src.graph.state import AgentState
+from src.utils.i18n import t
 
 
 def call_llm(
@@ -48,6 +49,18 @@ def call_llm(
     model_info = get_model_info(model_name, model_provider)
     llm = get_model(model_name, model_provider, api_keys)
 
+    # Qwen/DashScope requires "json" keyword in prompt when using response_format json_object
+    if model_provider == "Alibaba" and model_info and model_info.has_json_mode():
+        from langchain_core.messages import SystemMessage
+        if isinstance(prompt, str):
+            prompt = prompt + "\nPlease respond in valid JSON format."
+        else:
+            # ChatPromptValue or list of messages: append a SystemMessage
+            if hasattr(prompt, 'to_messages'):
+                prompt = prompt.messages + [SystemMessage(content="Respond in valid JSON format only.")]
+            elif isinstance(prompt, list):
+                prompt = prompt + [SystemMessage(content="Respond in valid JSON format only.")]
+
     # For non-JSON support models, we can use structured output
     if not (model_info and not model_info.has_json_mode()):
         llm = llm.with_structured_output(
@@ -71,10 +84,10 @@ def call_llm(
 
         except Exception as e:
             if agent_name:
-                progress.update_status(agent_name, None, f"Error - retry {attempt + 1}/{max_retries}")
+                progress.update_status(agent_name, None, f"{t('error_retry')} {attempt + 1}/{max_retries}")
 
             if attempt == max_retries - 1:
-                print(f"Error in LLM call after {max_retries} attempts: {e}")
+                print(t('llm_error', max_retries=max_retries))
                 # Use default_factory if provided, otherwise create a basic default
                 if default_factory:
                     return default_factory()
@@ -89,7 +102,7 @@ def create_default_response(model_class: type[BaseModel]) -> BaseModel:
     default_values = {}
     for field_name, field in model_class.model_fields.items():
         if field.annotation == str:
-            default_values[field_name] = "Error in analysis, using default"
+            default_values[field_name] = t('analysis_error')
         elif field.annotation == float:
             default_values[field_name] = 0.0
         elif field.annotation == int:
@@ -117,7 +130,7 @@ def extract_json_from_response(content: str) -> dict | None:
                 json_text = json_text[:json_end].strip()
                 return json.loads(json_text)
     except Exception as e:
-        print(f"Error extracting JSON from response: {e}")
+        print(f"{t('extract_json_error')}: {e}")
     return None
 
 

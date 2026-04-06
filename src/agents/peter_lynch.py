@@ -474,6 +474,7 @@ def generate_lynch_output(
                   "confidence": 0 to 100,
                   "reasoning": "string"
                 }}
+                所有推理和理由必须使用简体中文。
                 """,
             ),
             (
